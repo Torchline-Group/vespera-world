@@ -1,36 +1,134 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vespera Rough Draft CRM
 
-## Getting Started
+Production-ready rough draft CRM for Vespera with:
+- omnichannel inbox (internal chat, email, WhatsApp, Telegram, call logs)
+- API adapters for Chatwoot and Helpwise webhooks
+- auto-assignment and SLA tracking
+- bilingual workflows (English/Spanish), translation endpoint, and AI helper
+- Supabase backend (Postgres, Auth, Realtime, RLS) and Vercel deployment
 
-First, run the development server:
+## Live Environment
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- App URL: `https://vespera-crm-cloud.vercel.app`
+- Frontend/API host: Vercel
+- Database/Auth/Realtime: Supabase project `jvmmphjbjcprifzbuify`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Next.js 16 (App Router), TypeScript, React 19
+- Supabase (`@supabase/supabase-js`, `@supabase/ssr`)
+- CSS-based custom Vespera theme
+- Optional LLM provider via OpenAI-compatible API
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Core Features Included
 
-## Learn More
+- **CRM Pipeline**: leads, scoring, statuses, activities, dashboard
+- **Omnichannel Inbox**:
+  - channel-aware rooms (`internal`, `email`, `whatsapp`, `telegram`, `call`)
+  - communication event timeline
+  - message direction metadata (`inbound`/`outbound`/`system`)
+- **Integrations**:
+  - `POST /api/webhooks/chatwoot`
+  - `POST /api/webhooks/helpwise`
+  - generic APIs:
+    - `POST /api/inbox/messages`
+    - `POST /api/inbox/events`
+- **Automation**:
+  - inbound message auto-assigns least-loaded sales/support/admin user
+  - first-response SLA starts on inbound and resolves on first outbound response
+- **Bilingual Ops**:
+  - canned responses in EN/ES with channel targeting
+  - translation endpoint: `POST /api/inbox/translate`
+  - AI helper endpoint: `POST /api/ai/reply`
 
-To learn more about Next.js, take a look at the following resources:
+## Requirements (Business Partner Checklist)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Accounts and Access
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Supabase owner/admin access
+- Vercel project admin access
+- Optional:
+  - Chatwoot admin for webhook setup
+  - Helpwise admin for webhook setup
+  - OpenAI or compatible LLM provider account
 
-## Deploy on Vercel
+### Runtime Requirements
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Node.js 20+ recommended
+- npm 10+ recommended
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Required Environment Variables
+
+These must be set in Vercel project settings (Production environment):
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only; required for webhook ingestion)
+- `INBOX_API_KEY` (shared secret for API ingestion)
+- `DEFAULT_AGENT_USER_ID` (a valid UUID from `public.profiles.id`)
+- `CHATWOOT_WEBHOOK_TOKEN` (shared token for Chatwoot webhook)
+- `HELPWISE_WEBHOOK_TOKEN` (shared token for Helpwise webhook)
+
+Optional:
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL` (default: `gpt-4o-mini`)
+- `OPENAI_BASE_URL` (default: `https://api.openai.com/v1`)
+
+## Quick Start (Local)
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Copy `.env.example` to `.env.local` and fill values.
+3. Run dev server:
+   ```bash
+   npm run dev
+   ```
+4. Open `http://localhost:3000`.
+
+## Database Notes
+
+Schema includes:
+- `profiles`, `leads`, `activities`
+- `chat_rooms`, `chat_participants`, `chat_messages`
+- `channel_connections`, `communication_events`, `canned_responses`
+
+RLS is enabled on operational tables. Authenticated users can access CRM data as defined by policies.
+
+## Integration Setup
+
+### Chatwoot
+
+- Configure webhook URL:
+  - `https://vespera-crm-cloud.vercel.app/api/webhooks/chatwoot`
+- Add header token:
+  - `x-chatwoot-token: <CHATWOOT_WEBHOOK_TOKEN>`
+
+### Helpwise
+
+- Configure webhook URL:
+  - `https://vespera-crm-cloud.vercel.app/api/webhooks/helpwise`
+- Add header token:
+  - `x-helpwise-token: <HELPWISE_WEBHOOK_TOKEN>`
+
+## Security Notes
+
+- Never expose `SUPABASE_SERVICE_ROLE_KEY` client-side.
+- Do not commit real secrets to git.
+- Rotate webhook/API tokens if shared outside trusted ops channels.
+
+## Deployment
+
+- Vercel production deploy command:
+  ```bash
+  npx vercel --prod
+  ```
+- Detailed deployment walkthrough: see `DEPLOY.md`.
+
+## Roadmap Suggestions (Next)
+
+- Per-channel SLA rules (e.g., WhatsApp 5m, Email 60m)
+- Language-based routing/assignment
+- AI suggested replies from conversation intent
+- Outbound channel sending adapters (beyond ingestion)

@@ -27,7 +27,8 @@ function initialsFromName(fullName: string): string {
 const NAV_ITEMS = [
   { href: '/', label: 'Dashboard' },
   { href: '/leads', label: 'Prospects' },
-  { href: '/chat', label: 'Messages' },
+  { href: '/chat', label: 'Inbox' },
+  { href: '/integrations', label: 'Integrations' },
   { href: '/trust', label: 'Trust & Safety' },
 ] as const
 
@@ -79,7 +80,19 @@ function IconShield() {
   )
 }
 
-const ICONS = [IconDashboard, IconPeople, IconChat, IconShield] as const
+function IconPlug() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8.25 7.5V4.875m7.5 2.625V4.875M6.75 9.75h10.5M12 9.75v8.25m0 0h3a3 3 0 003-3V12.75H6V15a3 3 0 003 3h3z"
+      />
+    </svg>
+  )
+}
+
+const ICONS = [IconDashboard, IconPeople, IconChat, IconPlug, IconShield] as const
 
 export default function Sidebar({ user, currentPath }: SidebarProps) {
   const router = useRouter()
