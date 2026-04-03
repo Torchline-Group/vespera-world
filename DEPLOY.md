@@ -41,6 +41,23 @@ HELPWISE_WEBHOOK_TOKEN=replace-with-random-token
 # Optional for AI + translation
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o-mini
+
+# Shopify (Admin API — from Shopify Partners / store admin)
+SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
+SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_...
+
+# Polar (polar.sh — organization access token)
+POLAR_ACCESS_TOKEN=
+POLAR_ORGANIZATION_ID=
+
+# Vendura (set per your provider docs)
+VENDURA_API_KEY=
+VENDURA_API_BASE_URL=
+
+# Stripe (dashboard → API keys; use test keys in preview)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 ```
 
 ## Step 5: Test Locally
@@ -76,6 +93,17 @@ npx vercel env add HELPWISE_WEBHOOK_TOKEN
 # Optional
 npx vercel env add OPENAI_API_KEY
 npx vercel env add OPENAI_MODEL
+
+# Commerce / billing (as needed)
+npx vercel env add SHOPIFY_STORE_DOMAIN
+npx vercel env add SHOPIFY_ADMIN_ACCESS_TOKEN
+npx vercel env add POLAR_ACCESS_TOKEN
+npx vercel env add POLAR_ORGANIZATION_ID
+npx vercel env add VENDURA_API_KEY
+npx vercel env add VENDURA_API_BASE_URL
+npx vercel env add STRIPE_SECRET_KEY
+npx vercel env add STRIPE_WEBHOOK_SECRET
+npx vercel env add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ```
 
 Deploy to production:

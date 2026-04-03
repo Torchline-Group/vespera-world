@@ -1,17 +1,30 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import Sidebar from '@/components/Sidebar'
 import { createClient } from '@/lib/supabase-browser'
-import type { CannedResponse, ChannelConnection, Profile } from '@/lib/types'
+import type { CannedResponse, ChannelConnection, Profile, StorefrontMode } from '@/lib/types'
 import { useRouter } from 'next/navigation'
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 
 const PROVIDERS = ['chatwoot', 'helpwise', 'whatsapp', 'telegram', 'email', 'voice'] as const
 
 type Provider = (typeof PROVIDERS)[number]
+type CheckoutProvider = 'snipcart' | 'samcart'
+
+type IntegrationStatus = {
+  shopify: boolean
+  polar: boolean
+  vendura: boolean
+  stripe: { secret: boolean; publishable: boolean; webhook: boolean }
+  openai: boolean
+  inbox: boolean
+  snipcartPublic: boolean
+}
 
 export default function IntegrationsPage() {
-  const supabase = useMemo(() => createClient(), [])
+  const supabase = useMemo(() => (typeof window === 'undefined' ? null : createClient()), [])
   const router = useRouter()
 
   const [ready, setReady] = useState(false)
@@ -29,8 +42,15 @@ export default function IntegrationsPage() {
   const [cLang, setCLang] = useState<'en' | 'es'>('es')
   const [cChannel, setCChannel] = useState<'all' | 'email' | 'whatsapp' | 'telegram' | 'internal' | 'call'>('all')
   const [cBody, setCBody] = useState('')
+  const [storefrontMode, setStorefrontMode] = useState<StorefrontMode>('headless')
+  const [csvInput, setCsvInput] = useState('')
+  const [checkoutProvider, setCheckoutProvider] = useState<CheckoutProvider>('snipcart')
+  const [snipcartPublicApiKey, setSnipcartPublicApiKey] = useState('')
+  const [samcartCheckoutUrl, setSamcartCheckoutUrl] = useState('')
+  const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null)
 
-  async function loadConnections() {
+  const loadConnections = useCallback(async () => {
+    if (!supabase) return
     const { data, error: e } = await supabase
       .from('channel_connections')
       .select('*')
@@ -43,9 +63,16 @@ export default function IntegrationsPage() {
     }
 
     setRows((data ?? []) as ChannelConnection[])
-  }
+  }, [supabase])
 
-  async function loadCanned() {
+  const loadStorefrontMode = useCallback(async () => {
+    const res = await fetch('/api/commerce/settings')
+    const payload = (await res.json()) as { mode?: StorefrontMode }
+    setStorefrontMode(payload.mode === 'liquid' ? 'liquid' : 'headless')
+  }, [])
+
+  const loadCanned = useCallback(async () => {
+    if (!supabase) return
     const { data, error: e } = await supabase
       .from('canned_responses')
       .select('*')
@@ -58,9 +85,38 @@ export default function IntegrationsPage() {
       return
     }
     setCanned((data ?? []) as CannedResponse[])
-  }
+  }, [supabase])
+
+  const loadCheckoutConfig = useCallback(async () => {
+    const res = await fetch('/api/commerce/checkout')
+    const payload = (await res.json()) as {
+      provider?: CheckoutProvider
+      snipcartPublicApiKey?: string
+      samcartCheckoutUrl?: string
+    }
+    setCheckoutProvider(payload.provider === 'samcart' ? 'samcart' : 'snipcart')
+    setSnipcartPublicApiKey(payload.snipcartPublicApiKey ?? '')
+    setSamcartCheckoutUrl(payload.samcartCheckoutUrl ?? '')
+  }, [])
+
+  const loadIntegrationStatus = useCallback(async () => {
+    const res = await fetch('/api/integration/status')
+    const payload = (await res.json()) as IntegrationStatus & { error?: string }
+    if (res.ok && !payload.error) {
+      setIntegrationStatus({
+        shopify: payload.shopify,
+        polar: payload.polar,
+        vendura: payload.vendura,
+        stripe: payload.stripe,
+        openai: payload.openai,
+        inbox: payload.inbox,
+        snipcartPublic: payload.snipcartPublic,
+      })
+    }
+  }, [])
 
   useEffect(() => {
+    if (!supabase) return
     let cancelled = false
 
     ;(async () => {
@@ -76,17 +132,24 @@ export default function IntegrationsPage() {
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       if (cancelled) return
       setProfile((prof as Profile) ?? null)
-      await Promise.all([loadConnections(), loadCanned()])
+      await Promise.all([
+        loadConnections(),
+        loadCanned(),
+        loadStorefrontMode(),
+        loadCheckoutConfig(),
+        loadIntegrationStatus(),
+      ])
       setReady(true)
     })()
 
     return () => {
       cancelled = true
     }
-  }, [router, supabase])
+  }, [router, supabase, loadConnections, loadCanned, loadStorefrontMode, loadCheckoutConfig, loadIntegrationStatus])
 
   async function createConnection(e: FormEvent) {
     e.preventDefault()
+    if (!supabase) return
     if (!label.trim()) return
     setSaving(true)
     setError(null)
@@ -112,6 +175,7 @@ export default function IntegrationsPage() {
   }
 
   async function toggleConnection(row: ChannelConnection) {
+    if (!supabase) return
     const { error: updateError } = await supabase
       .from('channel_connections')
       .update({
@@ -128,6 +192,7 @@ export default function IntegrationsPage() {
 
   async function createCannedResponse(e: FormEvent) {
     e.preventDefault()
+    if (!supabase) return
     if (!cTitle.trim() || !cBody.trim()) return
     setSaving(true)
     setError(null)
@@ -150,6 +215,7 @@ export default function IntegrationsPage() {
   }
 
   async function toggleCanned(row: CannedResponse) {
+    if (!supabase) return
     const { error: updateError } = await supabase
       .from('canned_responses')
       .update({
@@ -162,6 +228,55 @@ export default function IntegrationsPage() {
       return
     }
     await loadCanned()
+  }
+
+  async function setMode(mode: StorefrontMode) {
+    setStorefrontMode(mode)
+    await fetch('/api/commerce/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode }),
+    })
+  }
+
+  async function runShopifySync() {
+    setSaving(true)
+    const res = await fetch('/api/commerce/sync/shopify', { method: 'POST' })
+    const payload = (await res.json()) as { error?: string }
+    if (!res.ok || payload.error) setError(payload.error ?? 'Shopify sync failed')
+    setSaving(false)
+  }
+
+  async function importCsv() {
+    if (!csvInput.trim()) return
+    setSaving(true)
+    const res = await fetch('/api/commerce/csv/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ csv: csvInput }),
+    })
+    const payload = (await res.json()) as { error?: string }
+    if (!res.ok || payload.error) setError(payload.error ?? 'CSV import failed')
+    setSaving(false)
+  }
+
+  async function saveCheckoutConfig() {
+    setSaving(true)
+    setError(null)
+    const res = await fetch('/api/commerce/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: checkoutProvider,
+        snipcartPublicApiKey,
+        samcartCheckoutUrl,
+      }),
+    })
+    const payload = (await res.json()) as { error?: string }
+    if (!res.ok || payload.error) {
+      setError(payload.error ?? 'Could not save checkout config')
+    }
+    setSaving(false)
   }
 
   if (!ready) {
@@ -196,6 +311,142 @@ export default function IntegrationsPage() {
               {error}
             </p>
           )}
+
+          <section className="card" style={{ marginBottom: '1rem' }}>
+            <div className="card-body">
+              <h2 className="card-title" style={{ marginBottom: '0.35rem' }}>
+                Server environment (Vercel / `.env.local`)
+              </h2>
+              <p className="muted" style={{ marginBottom: '0.5rem' }}>
+                Which integration env vars are set on the server (no values shown). Configure in Vercel or `.env.example`.
+              </p>
+              {integrationStatus ? (
+                <div className="integration-status-grid">
+                  <span className={`integration-pill ${integrationStatus.shopify ? 'integration-pill--on' : 'integration-pill--off'}`}>
+                    Shopify {integrationStatus.shopify ? '●' : '○'}
+                  </span>
+                  <span className={`integration-pill ${integrationStatus.polar ? 'integration-pill--on' : 'integration-pill--off'}`}>
+                    Polar {integrationStatus.polar ? '●' : '○'}
+                  </span>
+                  <span className={`integration-pill ${integrationStatus.vendura ? 'integration-pill--on' : 'integration-pill--off'}`}>
+                    Vendura {integrationStatus.vendura ? '●' : '○'}
+                  </span>
+                  <span
+                    className={`integration-pill ${integrationStatus.stripe.secret ? 'integration-pill--on' : 'integration-pill--off'}`}
+                  >
+                    Stripe secret {integrationStatus.stripe.secret ? '●' : '○'}
+                  </span>
+                  <span
+                    className={`integration-pill ${integrationStatus.stripe.publishable ? 'integration-pill--on' : 'integration-pill--off'}`}
+                  >
+                    Stripe pk {integrationStatus.stripe.publishable ? '●' : '○'}
+                  </span>
+                  <span
+                    className={`integration-pill ${integrationStatus.stripe.webhook ? 'integration-pill--on' : 'integration-pill--off'}`}
+                  >
+                    Stripe webhook {integrationStatus.stripe.webhook ? '●' : '○'}
+                  </span>
+                  <span className={`integration-pill ${integrationStatus.openai ? 'integration-pill--on' : 'integration-pill--off'}`}>
+                    OpenAI {integrationStatus.openai ? '●' : '○'}
+                  </span>
+                  <span className={`integration-pill ${integrationStatus.inbox ? 'integration-pill--on' : 'integration-pill--off'}`}>
+                    Inbox API {integrationStatus.inbox ? '●' : '○'}
+                  </span>
+                  <span
+                    className={`integration-pill ${integrationStatus.snipcartPublic ? 'integration-pill--on' : 'integration-pill--off'}`}
+                  >
+                    Snipcart env {integrationStatus.snipcartPublic ? '●' : '○'}
+                  </span>
+                </div>
+              ) : (
+                <p className="muted">Could not load status.</p>
+              )}
+            </div>
+          </section>
+
+          <section className="card" style={{ marginBottom: '1rem' }}>
+            <div className="card-body">
+              <h2 className="card-title" style={{ marginBottom: '0.75rem' }}>
+                Storefront Mode
+              </h2>
+              <div className="mode-switch-row" style={{ marginBottom: '1rem' }}>
+                <button
+                  type="button"
+                  className={`btn-ghost ${storefrontMode === 'headless' ? 'active' : ''}`}
+                  onClick={() => setMode('headless')}
+                >
+                  Headless Next.js
+                </button>
+                <button
+                  type="button"
+                  className={`btn-ghost ${storefrontMode === 'liquid' ? 'active' : ''}`}
+                  onClick={() => setMode('liquid')}
+                >
+                  Shopify Liquid
+                </button>
+                <button type="button" className="btn-gold" onClick={runShopifySync} disabled={saving}>
+                  {saving ? 'Syncing…' : 'Sync Shopify Catalog'}
+                </button>
+              </div>
+
+              <h2 className="card-title" style={{ marginBottom: '0.75rem' }}>
+                Shopify CSV Import
+              </h2>
+              <div className="form-group">
+                <textarea
+                  rows={6}
+                  value={csvInput}
+                  onChange={(e) => setCsvInput(e.target.value)}
+                  placeholder="Paste Shopify-formatted CSV text here..."
+                />
+              </div>
+              <button type="button" className="btn-ghost" onClick={importCsv} disabled={saving}>
+                Import CSV
+              </button>
+            </div>
+          </section>
+
+          <section className="card" style={{ marginBottom: '1rem' }}>
+            <div className="card-body">
+              <h2 className="card-title" style={{ marginBottom: '0.75rem' }}>
+                Checkout Integration
+              </h2>
+              <p className="muted" style={{ marginBottom: '0.85rem' }}>
+                SuiteDash is removed. Configure Snipcart (recommended) or SamCart for marketplace checkout.
+              </p>
+              <div className="three-col" style={{ marginBottom: '0.75rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Provider</label>
+                  <select
+                    value={checkoutProvider}
+                    onChange={(e) => setCheckoutProvider(e.target.value as CheckoutProvider)}
+                  >
+                    <option value="snipcart">Snipcart</option>
+                    <option value="samcart">SamCart</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Snipcart Public API Key</label>
+                  <input
+                    value={snipcartPublicApiKey}
+                    onChange={(e) => setSnipcartPublicApiKey(e.target.value)}
+                    placeholder="pk_live_..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">SamCart Checkout URL</label>
+                  <input
+                    value={samcartCheckoutUrl}
+                    onChange={(e) => setSamcartCheckoutUrl(e.target.value)}
+                    placeholder="https://yourbrand.samcart.com/products/..."
+                  />
+                </div>
+              </div>
+              <button type="button" className="btn-gold" onClick={saveCheckoutConfig} disabled={saving}>
+                {saving ? 'Saving…' : 'Save Checkout Integration'}
+              </button>
+            </div>
+          </section>
 
           <section className="card" style={{ marginBottom: '1rem' }}>
             <div className="card-body">

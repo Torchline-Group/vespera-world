@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase-browser'
 import Sidebar from '@/components/Sidebar'
 import type { Lead, OutreachStatus, Profile, Segment } from '@/lib/types'
 import { useRouter } from 'next/navigation'
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const PAGE_SIZE = 20
 
@@ -81,9 +81,16 @@ export default function LeadsPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [newLead, setNewLead] = useState(defaultNewLead)
   const [savingLead, setSavingLead] = useState(false)
+  const committedSearchRef = useRef('')
 
   useEffect(() => {
-    const t = setTimeout(() => setSearch(searchInput.trim()), 400)
+    const t = setTimeout(() => {
+      const next = searchInput.trim()
+      if (committedSearchRef.current === next) return
+      committedSearchRef.current = next
+      setSearch(next)
+      window.setTimeout(() => setPage(0), 0)
+    }, 400)
     return () => clearTimeout(t)
   }, [searchInput])
 
@@ -168,12 +175,15 @@ export default function LeadsPage() {
 
   useEffect(() => {
     if (!ready) return
-    fetchLeads()
+    let cancelled = false
+    const handle = window.setTimeout(() => {
+      if (!cancelled) void fetchLeads()
+    }, 0)
+    return () => {
+      cancelled = true
+      window.clearTimeout(handle)
+    }
   }, [fetchLeads, ready])
-
-  useEffect(() => {
-    setPage(0)
-  }, [segment, status, scoreFilter, search])
 
   async function handleAddLead(e: FormEvent) {
     e.preventDefault()
@@ -251,7 +261,10 @@ export default function LeadsPage() {
           <select
             className="filter-select"
             value={segment}
-            onChange={(e) => setSegment(e.target.value)}
+            onChange={(e) => {
+              setSegment(e.target.value)
+              setPage(0)
+            }}
             aria-label="Segment"
           >
             <option value="">All segments</option>
@@ -264,7 +277,10 @@ export default function LeadsPage() {
           <select
             className="filter-select"
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={(e) => {
+              setStatus(e.target.value)
+              setPage(0)
+            }}
             aria-label="Status"
           >
             <option value="">All statuses</option>
@@ -277,7 +293,10 @@ export default function LeadsPage() {
           <select
             className="filter-select"
             value={scoreFilter}
-            onChange={(e) => setScoreFilter(e.target.value as ScoreFilter)}
+            onChange={(e) => {
+              setScoreFilter(e.target.value as ScoreFilter)
+              setPage(0)
+            }}
             aria-label="Fit score"
           >
             <option value="any">Any score</option>

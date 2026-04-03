@@ -116,12 +116,6 @@ export default function LeadDetailPage() {
   }, [leadIdStr, supabase])
 
   useEffect(() => {
-    if (lead && !isEditing) {
-      setDraft(lead)
-    }
-  }, [lead, isEditing])
-
-  useEffect(() => {
     let cancelled = false
 
     ;(async () => {
@@ -155,7 +149,14 @@ export default function LeadDetailPage() {
 
   useEffect(() => {
     if (!ready || !leadIdStr) return
-    refreshLeadAndActivities()
+    let cancelled = false
+    const handle = window.setTimeout(() => {
+      if (!cancelled) void refreshLeadAndActivities()
+    }, 0)
+    return () => {
+      cancelled = true
+      window.clearTimeout(handle)
+    }
   }, [leadIdStr, ready, refreshLeadAndActivities])
 
   function startEdit() {

@@ -3,6 +3,7 @@ export type OutreachStatus = 'not_contacted' | 'contacted' | 'replied' | 'meetin
 export type UserRole = 'admin' | 'sales' | 'support' | 'client'
 export type ChannelType = 'internal' | 'email' | 'whatsapp' | 'telegram' | 'call'
 export type ProviderType = 'native' | 'chatwoot' | 'helpwise' | 'whatsapp' | 'telegram' | 'email' | 'voice'
+export type StorefrontMode = 'liquid' | 'headless'
 
 export interface Profile {
   id: string
@@ -123,4 +124,76 @@ export interface CannedResponse {
   created_by?: string
   created_at: string
   updated_at: string
+}
+
+export interface Product {
+  id: number
+  source: 'shopify' | 'manual' | 'csv'
+  external_id?: string
+  handle: string
+  title: string
+  body_html?: string
+  vendor?: string
+  product_type?: string
+  tags?: string
+  status: 'draft' | 'active' | 'archived'
+  price: number
+  compare_at_price?: number
+  sku?: string
+  inventory_qty: number
+  featured_image_url?: string
+  published_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ProductImage {
+  id: number
+  product_id: number
+  src: string
+  alt?: string
+  position: number
+  created_at: string
+}
+
+export interface ContentBlock {
+  id: number
+  slug: string
+  title: string
+  body: string
+  type: 'hero' | 'rich_text' | 'faq' | 'banner' | 'custom'
+  is_published: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface PortalForm {
+  id: number
+  title: string
+  description?: string
+  fields_json: string
+  status: 'draft' | 'published' | 'archived'
+  created_by?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface FormSubmission {
+  id: number
+  form_id: number
+  submitted_by?: string
+  payload_json: string
+  created_at: string
+}
+
+export interface DocumentAcknowledgement {
+  id: number
+  title: string
+  content: string
+  signer_name: string
+  signer_email?: string
+  signed_at: string
+  signer_ip?: string
+  signer_user_agent?: string
+  created_by?: string
 }

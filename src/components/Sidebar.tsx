@@ -27,7 +27,10 @@ function initialsFromName(fullName: string): string {
 const NAV_ITEMS = [
   { href: '/', label: 'Dashboard' },
   { href: '/leads', label: 'Prospects' },
+  { href: '/dsers', label: "DS'ers" },
   { href: '/chat', label: 'Inbox' },
+  { href: '/commerce', label: 'Commerce' },
+  { href: '/portal', label: 'Client Portal' },
   { href: '/integrations', label: 'Integrations' },
   { href: '/trust', label: 'Trust & Safety' },
 ] as const
@@ -92,7 +95,31 @@ function IconPlug() {
   )
 }
 
-const ICONS = [IconDashboard, IconPeople, IconChat, IconPlug, IconShield] as const
+function IconStore() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3 9.75h18m-1.5 0V19.5a1.5 1.5 0 01-1.5 1.5h-12A1.5 1.5 0 014.5 19.5V9.75m13.5 0l-1.282-5.128A1.5 1.5 0 0015.262 3.5H8.738a1.5 1.5 0 00-1.456 1.122L6 9.75m6 4.5v6"
+      />
+    </svg>
+  )
+}
+
+function IconPortal() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3.75 4.5h16.5v15h-16.5v-15zm4.5 4.5h7.5m-7.5 4.5h4.5"
+      />
+    </svg>
+  )
+}
+
+const ICONS = [IconDashboard, IconPeople, IconPeople, IconChat, IconStore, IconPortal, IconPlug, IconShield] as const
 
 export default function Sidebar({ user, currentPath }: SidebarProps) {
   const router = useRouter()
@@ -110,9 +137,9 @@ export default function Sidebar({ user, currentPath }: SidebarProps) {
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          Ves<span>pera</span>
+          Vespera <span>World</span>
         </div>
-        <p className="sidebar-subtitle">CRM</p>
+        <p className="sidebar-subtitle">Luxury Commerce CRM</p>
       </div>
 
       <nav className="sidebar-nav" aria-label="Main navigation">
