@@ -74,6 +74,16 @@ Optional:
 - `OPENAI_MODEL` (default: `gpt-4o-mini`)
 - `OPENAI_BASE_URL` (default: `https://api.openai.com/v1`)
 
+Commerce & payments (set when you wire those features; values come from each provider’s dashboard — the repo does not mint real secrets):
+
+- **Shopify** (catalog sync): `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_ADMIN_ACCESS_TOKEN`
+- **Polar** (billing): `POLAR_ACCESS_TOKEN`, optional `POLAR_ORGANIZATION_ID`
+- **Vendura**: `VENDURA_API_KEY`, optional `VENDURA_API_BASE_URL`
+- **Stripe**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- **Snipcart** (optional duplicate of Integrations UI): `NEXT_PUBLIC_SNIPCART_PUBLIC_API_KEY`
+
+See `.env.example` for the full list. Use `node scripts/generate-secrets.mjs` to generate random strings for *your own* app secrets (e.g. `INBOX_API_KEY`), not for Shopify/Stripe/etc.
+
 ## Quick Start (Local)
 
 1. Install dependencies:

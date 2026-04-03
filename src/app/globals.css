@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -26,9 +24,9 @@
   --vespera-border: #2a2a2a;
   --vespera-border-light: #333333;
 
-  --vespera-font-display: "Cormorant Garamond", "Times New Roman", Times, serif;
-  --vespera-font-body: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+  --vespera-font-display: var(--font-display), "Times New Roman", Times, serif;
+  --vespera-font-body: var(--font-body), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
 
   --vespera-radius-sm: 6px;
   --vespera-radius-md: 10px;
@@ -1798,6 +1796,486 @@ button.chat-room-item {
 
 @media (max-width: 1100px) {
   .chat-tools-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Vespera World glassmorphic overrides                                       */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  --vespera-bg-primary: #090a0f;
+  --vespera-bg-secondary: #11131a;
+  --vespera-bg-card: rgba(18, 22, 31, 0.58);
+  --vespera-bg-elevated: rgba(24, 29, 41, 0.62);
+
+  --vespera-gold: #bfa37a;
+  --vespera-gold-light: #d8c1a1;
+  --vespera-gold-dim: #9d835f;
+  --vespera-gold-glow: rgba(202, 164, 123, 0.22);
+
+  --vespera-text-primary: #f8f9ff;
+  --vespera-text-secondary: #d3d8e3;
+  --vespera-text-muted: #9ba6bc;
+
+  --vespera-border: rgba(255, 255, 255, 0.15);
+  --vespera-border-light: rgba(255, 255, 255, 0.24);
+}
+
+body.vespera-world-theme {
+  background:
+    radial-gradient(circle at 15% -15%, rgba(227, 183, 144, 0.18) 0%, transparent 35%),
+    radial-gradient(circle at 90% 5%, rgba(255, 255, 255, 0.12) 0%, transparent 30%),
+    linear-gradient(165deg, #07090d 0%, #0d1118 45%, #111722 100%);
+}
+
+.sidebar,
+.main-content,
+.card,
+.modal,
+.chat-sidebar,
+.chat-main,
+.stat-card,
+.trust-banner,
+.login-card {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.sidebar,
+.card,
+.stat-card,
+.chat-msg.received,
+.modal,
+.login-card,
+.chat-event-item {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)) padding-box,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.32), rgba(202, 164, 123, 0.36)) border-box;
+  border: 1px solid transparent;
+}
+
+.page-header {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03)) padding-box,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.26), rgba(202, 164, 123, 0.32)) border-box;
+  border: 1px solid transparent;
+}
+
+.btn-gold {
+  background: linear-gradient(145deg, #f0dcc2 0%, #d8bc9a 45%, #ab8d67 100%);
+  color: #0b0d12;
+}
+
+.nav-item.active,
+.channel-pill.active {
+  background: linear-gradient(145deg, rgba(216, 193, 161, 0.32), rgba(216, 193, 161, 0.08));
+}
+
+.market-shell {
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.glass-hero {
+  border-radius: 24px;
+  padding: 2rem;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03)) padding-box,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.46), rgba(202, 164, 123, 0.34)) border-box;
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: var(--vespera-gold-light);
+  margin: 0 0 0.35rem;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1rem;
+}
+
+.product-card-glass {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.02)) padding-box,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.42), rgba(202, 164, 123, 0.32)) border-box;
+}
+
+.product-card-thumb {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.product-card-body {
+  padding: 0.85rem;
+}
+
+.product-card-body h3 {
+  margin: 0.35rem 0 0.65rem;
+  font-size: 1rem;
+}
+
+.product-vendor {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--vespera-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.product-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.product-detail-glass {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 1rem;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.03)) padding-box,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.42), rgba(202, 164, 123, 0.32)) border-box;
+  padding: 1rem;
+}
+
+.product-detail-image {
+  width: 100%;
+  height: auto;
+  max-height: 540px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.product-price {
+  margin: 0.45rem 0 0.9rem;
+  color: var(--vespera-gold-light);
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.product-description {
+  white-space: pre-wrap;
+  color: var(--vespera-text-secondary);
+}
+
+.product-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.mode-switch-row {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.mode-switch-row .btn-ghost.active {
+  border-color: rgba(202, 164, 123, 0.65);
+  color: var(--vespera-gold-light);
+}
+
+.portal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.portal-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.portal-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  border: 1px solid var(--vespera-border);
+  border-radius: 12px;
+  padding: 0.55rem 0.65rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.table-action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+@media (max-width: 960px) {
+  .product-detail-glass,
+  .portal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Portal — polished workspace                                                  */
+/* -------------------------------------------------------------------------- */
+
+.portal-toast {
+  grid-column: 1 / -1;
+  padding: 0.65rem 1rem;
+  border-radius: var(--vespera-radius-md);
+  border: 1px solid rgba(135, 216, 168, 0.35);
+  background: rgba(135, 216, 168, 0.08);
+  color: #b8e6c8;
+  font-size: 0.9rem;
+}
+
+.portal-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.portal-stat-pill {
+  border-radius: var(--vespera-radius-md);
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--vespera-border);
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+}
+
+.portal-stat-pill .portal-stat-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--vespera-gold-light);
+  line-height: 1.2;
+}
+
+.portal-stat-pill .portal-stat-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--vespera-text-muted);
+  margin-top: 0.25rem;
+}
+
+.portal-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.portal-badge--ok {
+  background: rgba(135, 216, 168, 0.12);
+  color: #87d8a8;
+  border: 1px solid rgba(135, 216, 168, 0.35);
+}
+
+.portal-badge--pending {
+  background: rgba(201, 163, 79, 0.1);
+  color: var(--vespera-gold-light);
+  border: 1px solid rgba(201, 163, 79, 0.35);
+}
+
+.portal-form-create {
+  padding: 1rem;
+  border-radius: var(--vespera-radius-md);
+  border: 1px dashed var(--vespera-border-light);
+  background: rgba(255, 255, 255, 0.02);
+  margin-bottom: 1.25rem;
+}
+
+.portal-form-create h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--vespera-text-secondary);
+}
+
+.portal-form-card {
+  border: 1px solid var(--vespera-border);
+  border-radius: 14px;
+  padding: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.portal-form-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  transition: background var(--vespera-transition);
+}
+
+.portal-form-card__head:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.portal-form-card__title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 0 0 0.2rem;
+}
+
+.portal-form-card__desc {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--vespera-text-muted);
+  line-height: 1.4;
+}
+
+.portal-form-card__body {
+  padding: 0 0.85rem 0.85rem;
+  border-top: 1px solid var(--vespera-border);
+}
+
+.portal-submissions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.portal-submissions-table th,
+.portal-submissions-table td {
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--vespera-border);
+}
+
+.portal-submissions-table th {
+  color: var(--vespera-text-muted);
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.portal-payload-preview {
+  margin: 0.35rem 0 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--vespera-radius-sm);
+  background: var(--vespera-bg-secondary);
+  border: 1px solid var(--vespera-border);
+  font-size: 0.78rem;
+  color: var(--vespera-text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 8rem;
+  overflow: auto;
+}
+
+.portal-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.portal-timeline li {
+  position: relative;
+  padding-left: 1.1rem;
+  border-left: 2px solid var(--vespera-border);
+  margin-left: 0.35rem;
+  padding-bottom: 0.25rem;
+  border: none;
+  border-radius: 0;
+  background: none;
+}
+
+.portal-timeline li::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 0.35rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vespera-gold);
+  box-shadow: 0 0 0 3px rgba(201, 163, 79, 0.2);
+}
+
+.integration-status-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.integration-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  border: 1px solid var(--vespera-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--vespera-text-secondary);
+}
+
+.integration-pill--on {
+  border-color: rgba(135, 216, 168, 0.45);
+  color: #a8e6c0;
+  background: rgba(135, 216, 168, 0.06);
+}
+
+.integration-pill--off {
+  opacity: 0.75;
+}
+
+.product-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+.product-card-actions .btn-gold,
+.product-card-actions .btn-ghost {
+  width: 100%;
+  justify-content: center;
+}
+
+.market-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--vespera-text-muted);
+  border-radius: 16px;
+  border: 1px dashed var(--vespera-border);
+}
+
+@media (max-width: 640px) {
+  .portal-stat-strip {
     grid-template-columns: 1fr;
   }
 }

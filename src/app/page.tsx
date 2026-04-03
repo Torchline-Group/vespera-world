@@ -176,11 +176,19 @@ export default function DashboardPage() {
         <header className="page-header">
           <div className="page-header-text">
             <h1 className="page-title">Command Center</h1>
-            <p className="page-subtitle">Vespera pipeline overview</p>
+            <p className="page-subtitle">Vespera pipeline, commerce, and portal overview</p>
           </div>
-          <Link href="/leads" className="btn-gold">
-            View All Prospects
-          </Link>
+          <div className="mode-switch-row">
+            <Link href="/leads" className="btn-gold">
+              View Prospects
+            </Link>
+            <Link href="/commerce" className="btn-ghost">
+              Commerce
+            </Link>
+            <Link href="/portal" className="btn-ghost">
+              Portal
+            </Link>
+          </div>
         </header>
 
         <div className="page-body">

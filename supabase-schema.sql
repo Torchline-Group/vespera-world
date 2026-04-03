@@ -133,3 +133,216 @@ alter publication supabase_realtime add table public.chat_messages;
 
 -- 7. Seed data (run after creating your admin user via Supabase Auth)
 -- The app seeds on first login if the leads table is empty.
+
+-- 8. Omnichannel and automation extensions
+alter table public.chat_rooms add column if not exists channel text default 'internal';
+alter table public.chat_rooms add column if not exists external_contact text;
+alter table public.chat_rooms add column if not exists provider text default 'native';
+alter table public.chat_rooms add column if not exists provider_room_id text;
+alter table public.chat_rooms add column if not exists assigned_to uuid references public.profiles(id);
+alter table public.chat_rooms add column if not exists priority text default 'normal';
+alter table public.chat_rooms add column if not exists status text default 'open';
+alter table public.chat_rooms add column if not exists last_inbound_at timestamptz;
+alter table public.chat_rooms add column if not exists first_response_at timestamptz;
+alter table public.chat_rooms add column if not exists sla_first_response_due_at timestamptz;
+alter table public.chat_rooms add column if not exists sla_status text default 'none';
+
+alter table public.chat_messages add column if not exists direction text default 'inbound';
+alter table public.chat_messages add column if not exists original_language text;
+alter table public.chat_messages add column if not exists translated_language text;
+alter table public.chat_messages add column if not exists translated_content text;
+alter table public.chat_messages add column if not exists metadata jsonb default '{}'::jsonb;
+
+create table if not exists public.channel_connections (
+  id bigint generated always as identity primary key,
+  provider text not null,
+  label text not null,
+  webhook_url text,
+  api_key text,
+  config jsonb not null default '{}'::jsonb,
+  is_active boolean not null default true,
+  created_by uuid references public.profiles(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.channel_connections add column if not exists config jsonb not null default '{}'::jsonb;
+
+alter table public.channel_connections enable row level security;
+drop policy if exists "Authenticated users can manage channel_connections" on public.channel_connections;
+create policy "Authenticated users can manage channel_connections"
+  on public.channel_connections for all using (auth.role() = 'authenticated');
+
+create table if not exists public.communication_events (
+  id bigint generated always as identity primary key,
+  room_id bigint references public.chat_rooms(id) on delete set null,
+  lead_id bigint references public.leads(id) on delete set null,
+  channel text not null,
+  direction text not null default 'outbound',
+  subject text,
+  body text,
+  status text not null default 'logged',
+  external_id text,
+  created_by uuid references public.profiles(id),
+  created_at timestamptz not null default now()
+);
+alter table public.communication_events add column if not exists status text not null default 'logged';
+alter table public.communication_events add column if not exists external_id text;
+
+alter table public.communication_events enable row level security;
+drop policy if exists "Authenticated users can manage communication_events" on public.communication_events;
+create policy "Authenticated users can manage communication_events"
+  on public.communication_events for all using (auth.role() = 'authenticated');
+
+create table if not exists public.canned_responses (
+  id bigint generated always as identity primary key,
+  title text not null,
+  language text not null check (language in ('en','es')),
+  channel text not null default 'all',
+  body text not null,
+  tags text,
+  is_active boolean not null default true,
+  created_by uuid references public.profiles(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.canned_responses add column if not exists tags text;
+
+alter table public.canned_responses enable row level security;
+drop policy if exists "Authenticated users can manage canned_responses" on public.canned_responses;
+create policy "Authenticated users can manage canned_responses"
+  on public.canned_responses for all using (auth.role() = 'authenticated');
+
+-- 9. Commerce core (Shopify/CSV-safe MVP)
+create table if not exists public.products (
+  id bigint generated always as identity primary key,
+  source text not null default 'manual' check (source in ('shopify','manual','csv')),
+  external_id text,
+  handle text not null unique,
+  title text not null,
+  body_html text,
+  vendor text,
+  product_type text,
+  tags text,
+  status text not null default 'draft' check (status in ('draft','active','archived')),
+  price numeric not null default 0,
+  compare_at_price numeric,
+  sku text,
+  inventory_qty int not null default 0,
+  featured_image_url text,
+  published_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists products_status_idx on public.products(status);
+create index if not exists products_source_idx on public.products(source);
+
+alter table public.products enable row level security;
+drop policy if exists "Authenticated users can manage products" on public.products;
+create policy "Authenticated users can manage products"
+  on public.products for all using (auth.role() = 'authenticated');
+
+create table if not exists public.product_images (
+  id bigint generated always as identity primary key,
+  product_id bigint not null references public.products(id) on delete cascade,
+  src text not null,
+  alt text,
+  position int not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.product_images enable row level security;
+drop policy if exists "Authenticated users can manage product_images" on public.product_images;
+create policy "Authenticated users can manage product_images"
+  on public.product_images for all using (auth.role() = 'authenticated');
+
+create table if not exists public.content_blocks (
+  id bigint generated always as identity primary key,
+  slug text not null unique,
+  title text not null,
+  body text not null default '',
+  type text not null default 'rich_text',
+  is_published boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.content_blocks enable row level security;
+drop policy if exists "Authenticated users can manage content_blocks" on public.content_blocks;
+create policy "Authenticated users can manage content_blocks"
+  on public.content_blocks for all using (auth.role() = 'authenticated');
+
+create table if not exists public.app_settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.app_settings enable row level security;
+drop policy if exists "Authenticated users can manage app_settings" on public.app_settings;
+create policy "Authenticated users can manage app_settings"
+  on public.app_settings for all using (auth.role() = 'authenticated');
+
+insert into public.app_settings(key, value)
+values ('storefront_mode', 'headless')
+on conflict (key) do nothing;
+
+insert into public.app_settings(key, value)
+values ('checkout_provider', 'snipcart')
+on conflict (key) do nothing;
+
+insert into public.app_settings(key, value)
+values ('snipcart_public_api_key', '')
+on conflict (key) do nothing;
+
+insert into public.app_settings(key, value)
+values ('samcart_checkout_url', '')
+on conflict (key) do nothing;
+
+-- 10. One-page portal + forms + acknowledgment signing
+create table if not exists public.portal_forms (
+  id bigint generated always as identity primary key,
+  title text not null,
+  description text,
+  fields_json text not null default '[]',
+  status text not null default 'draft' check (status in ('draft','published','archived')),
+  created_by uuid references public.profiles(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.portal_forms enable row level security;
+drop policy if exists "Authenticated users can manage portal_forms" on public.portal_forms;
+create policy "Authenticated users can manage portal_forms"
+  on public.portal_forms for all using (auth.role() = 'authenticated');
+
+create table if not exists public.portal_form_submissions (
+  id bigint generated always as identity primary key,
+  form_id bigint not null references public.portal_forms(id) on delete cascade,
+  submitted_by uuid references public.profiles(id),
+  payload_json text not null default '{}',
+  created_at timestamptz not null default now()
+);
+
+alter table public.portal_form_submissions enable row level security;
+drop policy if exists "Authenticated users can manage portal_form_submissions" on public.portal_form_submissions;
+create policy "Authenticated users can manage portal_form_submissions"
+  on public.portal_form_submissions for all using (auth.role() = 'authenticated');
+
+create table if not exists public.portal_ack_signatures (
+  id bigint generated always as identity primary key,
+  title text not null,
+  content text not null,
+  signer_name text not null,
+  signer_email text,
+  signed_at timestamptz not null,
+  signer_ip text,
+  signer_user_agent text,
+  created_by uuid references public.profiles(id),
+  created_at timestamptz not null default now()
+);
+
+alter table public.portal_ack_signatures enable row level security;
+drop policy if exists "Authenticated users can manage portal_ack_signatures" on public.portal_ack_signatures;
+create policy "Authenticated users can manage portal_ack_signatures"
+  on public.portal_ack_signatures for all using (auth.role() = 'authenticated');
