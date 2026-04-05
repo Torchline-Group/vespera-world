@@ -1235,6 +1235,43 @@ button.chat-room-item {
   color: var(--vespera-text-muted);
 }
 
+.login-skip-row {
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.btn-skip {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--vespera-text-primary);
+  background: transparent;
+  border: 1px solid var(--vespera-border);
+  border-radius: var(--vespera-radius-md);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.btn-skip:hover:not(:disabled) {
+  border-color: var(--vespera-gold);
+  background: rgba(201, 163, 79, 0.08);
+}
+
+.btn-skip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-skip-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  color: var(--vespera-text-muted);
+  line-height: 1.35;
+}
+
 .form-group p[role="alert"] {
   color: #e8a0a0;
   font-size: 0.85rem;

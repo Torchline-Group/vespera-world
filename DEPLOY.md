@@ -67,6 +67,8 @@ npm run dev
 ```
 Open http://localhost:3000 and log in with the credentials from Step 3.
 
+**Guest “Skip” on login:** In Supabase go to **Authentication → Providers → Anonymous** and enable it so the login **Skip** button can create a session without email or password.
+
 ## Step 6: Deploy to Vercel
 
 ```bash
