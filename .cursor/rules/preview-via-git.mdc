@@ -1,0 +1,33 @@
+---
+description: How to preview Vespera without the user running npm — Git push triggers Vercel
+alwaysApply: true
+---
+
+# Preview & deploy workflow (Vespera World)
+
+## Goal
+
+The user should **not** have to dig through folders or run `npm run dev` just to see progress. **Seeing the app on the web** should come from **git pushes**, which trigger **Vercel** (or the user’s connected host).
+
+## URLs (no custom domain required)
+
+- **Production**: one stable URL after the repo is linked in Vercel (e.g. `vespera-world.vercel.app` or a team default).
+- **Preview**: each push to a **non-default branch** (or PR) typically gets a **unique preview URL** in the Vercel dashboard / GitHub commit checks.
+
+Custom domains are optional (Vercel → Project → Domains).
+
+## What the agent should do
+
+1. After meaningful UI or app changes, **offer** to ship a preview: `git add`, `git commit`, `git push` to a branch like `preview/<short-description>` or `chore/agent-sync-<date>`.
+2. **Run** `npm run lint` and `npm run build` before pushing when the change touches app code (fix failures first).
+3. **Do not** ask the user to run npm for “see it live” — run commands in the terminal here instead.
+4. Tell the user where to open the result: **Vercel → Deployments** (and GitHub **Checks** on the commit if enabled), not `localhost` unless they explicitly want local debugging.
+
+## One-time setup (human, in dashboards)
+
+- Connect **GitHub** `Torchline-Group/vespera-world` to a **Vercel** project and set env vars there (mirror `.env.example` / `DEPLOY.md`).
+- After that, **every push** the agent does can produce a new deployment automatically.
+
+## Local dev
+
+- Use `npm run dev` only when debugging something that needs localhost; it is **not** the default “show me the project” path.
